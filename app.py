@@ -1,12 +1,9 @@
-from flask import Flask, render_template, request, send_file, url_for
+from flask import Flask, render_template, request, send_file
 import qrcode
-import os
+from io import BytesIO
+import base64
 
 app = Flask(__name__)
-
-# تأكد من وجود مجلد static، وإذا لم يكن موجودًا، أنشئه
-if not os.path.exists('static'):
-    os.makedirs('static')
 
 @app.route('/')
 def home():
@@ -20,18 +17,25 @@ def generate_qr():
     # إنشاء كود QR
     img = qrcode.make(qr_text)
     
-    # حفظ الصورة مؤقتًا في ملف
-    img_path = "static/qr_code.png"  # حفظ الصورة في مجلد static
-    img.save(img_path)
-    
+    # إنشاء كائن بايت في الذاكرة
+    img_bytes = BytesIO()
+    img.save(img_bytes, format='PNG')
+    img_bytes.seek(0)  # إعادة المؤشر إلى البداية
+
+    # تحويل الصورة إلى base64
+    img_base64 = base64.b64encode(img_bytes.getvalue()).decode('utf-8')
+
     # عرض الصورة مع زر التحميل
-    return render_template('index.html', qr_image=img_path)
+    return render_template('index.html', img_base64=img_base64)
 
 @app.route('/download_qr')
 def download_qr():
-    # تنزيل الصورة من المسار المحفوظ
-    img_path = "static/qr_code.png"
-    return send_file(img_path, as_attachment=True, download_name="qr_code.png")
+    # تنزيل الصورة بشكل مؤقت
+    img_bytes = BytesIO()
+    img_bytes.write(base64.b64decode(request.args.get('img_bytes')))
+    img_bytes.seek(0)  # إعادة المؤشر إلى البداية
+    
+    return send_file(img_bytes, as_attachment=True, download_name="qr_code.png", mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True)

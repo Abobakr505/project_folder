@@ -1,11 +1,9 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Generator</title>
-    <!-- ربط ملف CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
@@ -16,10 +14,10 @@
             <button type="submit">Generate QR Code</button>
         </form>
 
-        {% if qr_image %}
-            <img src="{{ url_for('static', filename='qr_code.png') }}" alt="QR Code">
+        {% if img_base64 %}
+            <img src="data:image/png;base64,{{ img_base64 }}" alt="QR Code">
             <br>
-            <a href="/download_qr"><button>Download QR Code</button></a>
+            <a href="{{ url_for('download_qr', img_bytes=img_base64) }}">Download QR Code</a>
         {% endif %}
     </div>
 </body>
